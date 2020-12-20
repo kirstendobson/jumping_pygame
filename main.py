@@ -20,12 +20,14 @@ class Game:
     # Load High Score
     def load_data(self):
         self.dir = path.dirname(__file__)
+        img_dir = path.join(self.dir, 'img')
         with open(path.join(self.dir, HS_FILE), 'w') as f:
             try:
                 self.highscore = int(f.read())
             except:
                 self.highscore = 0
-            
+        # Load spritesheet image
+        self.spritesheet = Spritesheet(path.join(img_dir, SPRITESHEET))
 
 
     # Start new game
@@ -36,7 +38,7 @@ class Game:
         self.player = Player(self)
         self.all_sprites.add(self.player)
         for plat in PLATFORM_LIST:
-            p = Platform(*plat)
+            p = Platform(self, *plat)
             self.all_sprites.add(p)
             self.platforms.add(p)
         self.run()
@@ -62,9 +64,9 @@ class Game:
 
         # Scroll up when player reaches top 1/4
         if self.player.rect.top <= HEIGHT / 4:
-            self.player.pos.y += abs(self.player.vel.y)
+            self.player.pos.y += max(abs(self.player.vel.y), 2)
             for plat in self.platforms:
-                plat.rect.y += abs(self.player.vel.y)
+                plat.rect.y += max(abs(self.player.vel.y), 2)
                 # Removes platforms once they are out of/below frame
                 if plat.rect.top >= HEIGHT:
                     plat.kill()
@@ -82,7 +84,7 @@ class Game:
         # Spawn new platforms to keep same avg number
         while len(self.platforms) < 6:
             width = random.randrange(50, 100)
-            p = Platform(random.randrange(0, WIDTH-width), random.randrange(-75, -30), width, 20)
+            p = Platform(self, random.randrange(0, WIDTH-width), random.randrange(-75, -30))
             self.platforms.add(p)
             self.all_sprites.add(p)
 
@@ -103,6 +105,7 @@ class Game:
     def draw(self):
         self.screen.fill(BGCOLOR)
         self.all_sprites.draw(self.screen)
+        self.screen.blit(self.player.image, self.player.rect)
         self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
         pg.display.flip()
 
